@@ -81,6 +81,8 @@ public class GameSession {
     private synchronized void handleMessage(String message, Stone playerStone) {
         if (message.startsWith("MOVE")) {
             handleMove(message, playerStone);
+        } else if (message.startsWith("NAME")) {
+            handleName(message, playerStone);
         } else {
             sendToPlayer(playerStone, "ERROR Unknown command");
         }
@@ -125,4 +127,16 @@ public class GameSession {
         player1Out.println(message);
         player2Out.println(message);
     }
+    
+    private void handleName(String message, Stone playerStone) {
+    String name = message.substring(5).trim();
+
+    if (name.isEmpty()) {
+        name = "Player";
+    }
+
+    System.out.println(playerStone + " name is: " + name);
+    broadcast("MESSAGE " + playerStone + " joined as " + name);
 }
+}
+

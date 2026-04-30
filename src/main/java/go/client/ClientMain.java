@@ -1,6 +1,6 @@
 package go.client;
 
-import go.ui.GameScreen;
+import go.ui.StartScreen;
 
 import javax.swing.SwingUtilities;
 
@@ -8,8 +8,8 @@ public class ClientMain {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            GameScreen gameScreen = new GameScreen("localhost", 5000);
-            gameScreen.setVisible(true);
+            StartScreen startScreen = new StartScreen();
+            startScreen.setVisible(true);
         });
     }
 }

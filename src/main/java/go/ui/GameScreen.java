@@ -23,7 +23,10 @@ public class GameScreen extends JFrame {
     private Stone myStone;
     private Stone currentTurn;
 
-    public GameScreen(String serverIp, int port) {
+    private String playerName;
+
+    public GameScreen(String serverIp, int port, String playerName) {
+        this.playerName = playerName;
         networkClient = new NetworkClient();
 
         setupWindow();
@@ -66,6 +69,7 @@ public class GameScreen extends JFrame {
     private void connectToServer(String serverIp, int port) {
         try {
             networkClient.connect(serverIp, port);
+            networkClient.sendMessage("NAME " + playerName);
             statusLabel.setText("Connected. Waiting for another player...");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Could not connect to server: " + e.getMessage());
