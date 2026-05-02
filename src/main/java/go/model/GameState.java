@@ -10,11 +10,14 @@ public class GameState {
     private boolean gameStarted;
     private boolean gameOver;
 
+    private boolean lastMoveWasPass;
+
     public GameState() {
         board = new Board();
         currentTurn = Stone.BLACK;
         gameStarted = false;
         gameOver = false;
+        lastMoveWasPass = false;
     }
 
     public Board getBoard() {
@@ -33,10 +36,19 @@ public class GameState {
         return gameOver;
     }
 
+    public boolean wasLastMovePass() {
+        return lastMoveWasPass;
+    }
+
+    public void setLastMoveWasPass(boolean lastMoveWasPass) {
+        this.lastMoveWasPass = lastMoveWasPass;
+    }
+
     public void startGame() {
         gameStarted = true;
         gameOver = false;
         currentTurn = Stone.BLACK;
+        lastMoveWasPass = false;
         board.clearBoard();
     }
 

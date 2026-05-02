@@ -2,7 +2,7 @@ package go.ui;
 
 import go.client.NetworkClient;
 import go.model.Stone;
-
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,6 +19,7 @@ public class GameScreen extends JFrame {
     private NetworkClient networkClient;
     private BoardPanel boardPanel;
     private JLabel statusLabel;
+    private JButton passButton;
 
     private Stone myStone;
     private Stone currentTurn;
@@ -45,6 +46,21 @@ public class GameScreen extends JFrame {
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
 
         boardPanel = new BoardPanel();
+        passButton = new JButton("Pass");
+        passButton.setFont(new Font("Arial", Font.BOLD, 16));
+
+        passButton.addActionListener(e -> {
+            if (myStone == null || currentTurn == null) {
+                return;
+            }
+
+            if (myStone != currentTurn) {
+                JOptionPane.showMessageDialog(this, "It is not your turn.");
+                return;
+            }
+
+            networkClient.sendMessage("PASS");
+        });
 
         boardPanel.setBoardClickListener((row, col) -> {
             if (myStone == null || currentTurn == null) {
@@ -59,9 +75,13 @@ public class GameScreen extends JFrame {
             networkClient.sendMessage("MOVE " + row + " " + col);
         });
 
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(passButton);
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(statusLabel, BorderLayout.NORTH);
         mainPanel.add(boardPanel, BorderLayout.CENTER);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         add(mainPanel);
     }
@@ -103,6 +123,10 @@ public class GameScreen extends JFrame {
                 handleTurnMessage(message);
             } else if (message.startsWith("VALID_MOVE")) {
                 handleValidMoveMessage(message);
+            } else if (message.startsWith("PASS")) {
+                handlePassMessage(message);
+            } else if (message.startsWith("GAME_OVER")) {
+                handleGameOverMessage(message);
             } else if (message.startsWith("INVALID_MOVE")) {
                 JOptionPane.showMessageDialog(this, "Invalid move.");
             } else if (message.startsWith("ERROR")) {
@@ -145,4 +169,26 @@ public class GameScreen extends JFrame {
             boardPanel.placeStone(row, col, stone);
         }
     }
+    private void handlePassMessage(String message) {
+    String[] parts = message.split(" ");
+
+    if (parts.length == 2) {
+        statusLabel.setText(parts[1] + " passed.");
+    }
+}
+
+private void handleGameOverMessage(String message) {
+    String[] parts = message.split(" ");
+
+    if (parts.length == 4) {
+        String winner = parts[1];
+        String blackScore = parts[2];
+        String whiteScore = parts[3];
+
+        EndScreen endScreen = new EndScreen(winner, blackScore, whiteScore);
+        endScreen.setVisible(true);
+
+        dispose();
+    }
+}
 }

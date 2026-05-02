@@ -81,6 +81,8 @@ public class GameSession {
     private synchronized void handleMessage(String message, Stone playerStone) {
         if (message.startsWith("MOVE")) {
             handleMove(message, playerStone);
+        } else if (message.startsWith("PASS")) {
+            handlePass(playerStone);
         } else if (message.startsWith("NAME")) {
             handleName(message, playerStone);
         } else {
@@ -127,16 +129,36 @@ public class GameSession {
         player1Out.println(message);
         player2Out.println(message);
     }
-    
-    private void handleName(String message, Stone playerStone) {
-    String name = message.substring(5).trim();
 
-    if (name.isEmpty()) {
-        name = "Player";
+    private void handleName(String message, Stone playerStone) {
+        String name = message.substring(5).trim();
+
+        if (name.isEmpty()) {
+            name = "Player";
+        }
+
+        System.out.println(playerStone + " name is: " + name);
+        broadcast("MESSAGE " + playerStone + " joined as " + name);
     }
 
-    System.out.println(playerStone + " name is: " + name);
-    broadcast("MESSAGE " + playerStone + " joined as " + name);
-}
-}
+    private void handlePass(Stone playerStone) {
+        boolean gameEnded = gameLogic.passTurn(playerStone);
 
+        if (gameEnded) {
+            Stone winner = gameLogic.calculateWinner();
+
+            int blackScore = gameLogic.countStones(Stone.BLACK);
+            int whiteScore = gameLogic.countStones(Stone.WHITE);
+
+            broadcast("GAME_OVER " + winner + " " + blackScore + " " + whiteScore);
+
+            System.out.println("Game over.");
+            System.out.println("Winner: " + winner);
+            System.out.println("Black score: " + blackScore);
+            System.out.println("White score: " + whiteScore);
+        } else {
+            broadcast("PASS " + playerStone);
+            broadcast("TURN " + gameState.getCurrentTurn());
+        }
+    }
+}
