@@ -9,8 +9,9 @@ public class GameState {
     private Stone currentTurn;
     private boolean gameStarted;
     private boolean gameOver;
-
     private boolean lastMoveWasPass;
+    private int restartRequests;
+    
 
     public GameState() {
         board = new Board();
@@ -18,6 +19,7 @@ public class GameState {
         gameStarted = false;
         gameOver = false;
         lastMoveWasPass = false;
+        restartRequests = 0;
     }
 
     public Board getBoard() {
@@ -49,6 +51,7 @@ public class GameState {
         gameOver = false;
         currentTurn = Stone.BLACK;
         lastMoveWasPass = false;
+        restartRequests = 0;
         board.clearBoard();
     }
 
@@ -58,5 +61,17 @@ public class GameState {
 
     public void switchTurn() {
         currentTurn = currentTurn.opposite();
+    }
+
+    public void addRestartRequest() {
+        restartRequests++;
+    }
+
+    public int getRestartRequests() {
+        return restartRequests;
+    }
+
+    public void resetRestartRequests() {
+        restartRequests = 0;
     }
 }

@@ -83,6 +83,8 @@ public class GameSession {
             handleMove(message, playerStone);
         } else if (message.startsWith("PASS")) {
             handlePass(playerStone);
+        } else if (message.startsWith("RESTART_REQUEST")) {
+            handleRestartRequest(playerStone);
         } else if (message.startsWith("NAME")) {
             handleName(message, playerStone);
         } else {
@@ -159,6 +161,23 @@ public class GameSession {
         } else {
             broadcast("PASS " + playerStone);
             broadcast("TURN " + gameState.getCurrentTurn());
+        }
+    }
+
+    private void handleRestartRequest(Stone playerStone) {
+        gameState.addRestartRequest();
+
+        broadcast("MESSAGE " + playerStone + " wants to play again.");
+
+        if (gameState.getRestartRequests() >= 2) {
+            gameState.startGame();
+
+            broadcast("RESTART");
+            broadcast("TURN BLACK");
+
+            System.out.println("Game restarted.");
+        } else {
+            sendToPlayer(playerStone, "MESSAGE Waiting for other player to restart...");
         }
     }
 }

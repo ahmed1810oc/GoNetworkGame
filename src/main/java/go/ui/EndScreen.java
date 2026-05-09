@@ -1,5 +1,7 @@
 package go.ui;
 
+import go.client.NetworkClient;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -13,13 +15,16 @@ import java.awt.GridLayout;
  */
 public class EndScreen extends JFrame {
 
-    public EndScreen(String winner, String blackScore, String whiteScore) {
+    private NetworkClient networkClient;
+
+    public EndScreen(String winner, String blackScore, String whiteScore, NetworkClient networkClient) {
+        this.networkClient = networkClient;
         setupWindow(winner, blackScore, whiteScore);
     }
 
     private void setupWindow(String winner, String blackScore, String whiteScore) {
         setTitle("Go Network Game - Game Over");
-        setSize(400, 300);
+        setSize(400, 320);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -48,13 +53,25 @@ public class EndScreen extends JFrame {
         resultPanel.add(blackScoreLabel);
         resultPanel.add(whiteScoreLabel);
 
+        JButton playAgainButton = new JButton("Play Again");
         JButton exitButton = new JButton("Exit");
+
+        playAgainButton.addActionListener(e -> {
+            networkClient.sendMessage("RESTART_REQUEST");
+            playAgainButton.setEnabled(false);
+            playAgainButton.setText("Waiting for other player...");
+        });
+
         exitButton.addActionListener(e -> System.exit(0));
+
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        buttonPanel.add(playAgainButton);
+        buttonPanel.add(exitButton);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
         mainPanel.add(resultPanel, BorderLayout.CENTER);
-        mainPanel.add(exitButton, BorderLayout.SOUTH);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(mainPanel);
     }

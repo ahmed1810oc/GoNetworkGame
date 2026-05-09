@@ -23,11 +23,17 @@ public class GameScreen extends JFrame {
 
     private Stone myStone;
     private Stone currentTurn;
+    private EndScreen endScreen;
 
     private String playerName;
+    private String serverIp;
+    private int port;
 
     public GameScreen(String serverIp, int port, String playerName) {
+        this.serverIp = serverIp;
+        this.port = port;
         this.playerName = playerName;
+
         networkClient = new NetworkClient();
 
         setupWindow();
@@ -127,6 +133,8 @@ public class GameScreen extends JFrame {
                 handlePassMessage(message);
             } else if (message.startsWith("GAME_OVER")) {
                 handleGameOverMessage(message);
+            } else if (message.startsWith("RESTART")) {
+                handleRestartMessage();
             } else if (message.startsWith("INVALID_MOVE")) {
                 JOptionPane.showMessageDialog(this, "Invalid move.");
             } else if (message.startsWith("ERROR")) {
@@ -169,26 +177,39 @@ public class GameScreen extends JFrame {
             boardPanel.placeStone(row, col, stone);
         }
     }
+
     private void handlePassMessage(String message) {
-    String[] parts = message.split(" ");
+        String[] parts = message.split(" ");
 
-    if (parts.length == 2) {
-        statusLabel.setText(parts[1] + " passed.");
+        if (parts.length == 2) {
+            statusLabel.setText(parts[1] + " passed.");
+        }
     }
-}
 
-private void handleGameOverMessage(String message) {
-    String[] parts = message.split(" ");
+    private void handleGameOverMessage(String message) {
+        String[] parts = message.split(" ");
 
-    if (parts.length == 4) {
-        String winner = parts[1];
-        String blackScore = parts[2];
-        String whiteScore = parts[3];
+        if (parts.length == 4) {
+            String winner = parts[1];
+            String blackScore = parts[2];
+            String whiteScore = parts[3];
 
-        EndScreen endScreen = new EndScreen(winner, blackScore, whiteScore);
-        endScreen.setVisible(true);
+            endScreen = new EndScreen(winner, blackScore, whiteScore, networkClient);
+            endScreen.setVisible(true);
 
-        dispose();
+            setVisible(false);
+        }
     }
-}
+
+    private void handleRestartMessage() {
+        if (endScreen != null) {
+            endScreen.dispose();
+            endScreen = null;
+        }
+
+        boardPanel.clearBoard();
+        currentTurn = Stone.BLACK;
+        statusLabel.setText("New game started.");
+        setVisible(true);
+    }
 }
