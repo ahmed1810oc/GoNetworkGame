@@ -133,6 +133,13 @@ public class BoardPanel extends JPanel {
     }
 
     public interface BoardClickListener {
+
         void onBoardClick(int row, int col);
+    }
+
+    public void setStoneAt(int row, int col, Stone stone) {
+        if (row >= 0 && row < Board.SIZE && col >= 0 && col < Board.SIZE) {
+            board[row][col] = stone;
+        }
     }
 }

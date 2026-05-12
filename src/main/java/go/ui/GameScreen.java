@@ -129,6 +129,8 @@ public class GameScreen extends JFrame {
                 handleTurnMessage(message);
             } else if (message.startsWith("VALID_MOVE")) {
                 handleValidMoveMessage(message);
+            } else if (message.startsWith("BOARD")) {
+                handleBoardMessage(message);
             } else if (message.startsWith("PASS")) {
                 handlePassMessage(message);
             } else if (message.startsWith("GAME_OVER")) {
@@ -211,5 +213,37 @@ public class GameScreen extends JFrame {
         currentTurn = Stone.BLACK;
         statusLabel.setText("New game started.");
         setVisible(true);
+    }
+
+    private void handleBoardMessage(String message) {
+        String boardText = message.substring(6);
+
+        String[] rows = boardText.split("\\|");
+
+        if (rows.length != go.model.Board.SIZE) {
+            return;
+        }
+
+        for (int row = 0; row < go.model.Board.SIZE; row++) {
+            String rowText = rows[row];
+
+            if (rowText.length() != go.model.Board.SIZE) {
+                return;
+            }
+
+            for (int col = 0; col < go.model.Board.SIZE; col++) {
+                char cell = rowText.charAt(col);
+
+                if (cell == 'B') {
+                    boardPanel.setStoneAt(row, col, Stone.BLACK);
+                } else if (cell == 'W') {
+                    boardPanel.setStoneAt(row, col, Stone.WHITE);
+                } else {
+                    boardPanel.setStoneAt(row, col, Stone.EMPTY);
+                }
+            }
+        }
+
+        boardPanel.repaint();
     }
 }

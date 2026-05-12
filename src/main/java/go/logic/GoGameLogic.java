@@ -1,5 +1,6 @@
 package go.logic;
 
+import go.model.Board;
 import go.model.GameState;
 import go.model.Stone;
 
@@ -10,10 +11,12 @@ public class GoGameLogic {
 
     private GameState gameState;
     private MoveValidator moveValidator;
+    private CaptureChecker captureChecker;
 
     public GoGameLogic(GameState gameState) {
         this.gameState = gameState;
         this.moveValidator = new MoveValidator();
+        this.captureChecker = new CaptureChecker();
     }
 
     /**
@@ -34,7 +37,32 @@ public class GoGameLogic {
             return false;
         }
 
+        // Save board before move.
+        // If the move is illegal because of suicide, we can restore it.
+        Stone[][] oldBoard = gameState.getBoard().getGridCopy();
+
         gameState.getBoard().placeStone(row, col, playerStone);
+
+        // Remove opponent stones with no liberties.
+        captureChecker.removeCapturedOpponentStones(
+                gameState.getBoard(),
+                row,
+                col,
+                playerStone
+        );
+
+        // Prevent suicide move.
+        // If the placed stone's own group has no liberties after captures, undo the move.
+        boolean ownGroupHasLiberty = captureChecker.groupHasLiberty(
+                gameState.getBoard(),
+                row,
+                col
+        );
+
+        if (!ownGroupHasLiberty) {
+            gameState.getBoard().setGrid(oldBoard);
+            return false;
+        }
 
         // Since this was a real move, reset pass tracking.
         gameState.setLastMoveWasPass(false);
@@ -73,20 +101,8 @@ public class GoGameLogic {
      * This is a simplified scoring system for the project.
      */
     public Stone calculateWinner() {
-        int blackCount = 0;
-        int whiteCount = 0;
-
-        for (int row = 0; row < gameState.getBoard().SIZE; row++) {
-            for (int col = 0; col < gameState.getBoard().SIZE; col++) {
-                Stone stone = gameState.getBoard().getStone(row, col);
-
-                if (stone == Stone.BLACK) {
-                    blackCount++;
-                } else if (stone == Stone.WHITE) {
-                    whiteCount++;
-                }
-            }
-        }
+        int blackCount = countStones(Stone.BLACK);
+        int whiteCount = countStones(Stone.WHITE);
 
         if (blackCount > whiteCount) {
             return Stone.BLACK;
@@ -100,8 +116,8 @@ public class GoGameLogic {
     public int countStones(Stone targetStone) {
         int count = 0;
 
-        for (int row = 0; row < gameState.getBoard().SIZE; row++) {
-            for (int col = 0; col < gameState.getBoard().SIZE; col++) {
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int col = 0; col < Board.SIZE; col++) {
                 if (gameState.getBoard().getStone(row, col) == targetStone) {
                     count++;
                 }

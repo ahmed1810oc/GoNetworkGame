@@ -107,7 +107,7 @@ public class GameSession {
             boolean success = gameLogic.playMove(row, col, playerStone);
 
             if (success) {
-                broadcast("VALID_MOVE " + row + " " + col + " " + playerStone);
+                broadcast("BOARD " + boardToProtocolString());
                 broadcast("TURN " + gameState.getCurrentTurn());
                 gameState.getBoard().printBoard();
             } else {
@@ -179,5 +179,29 @@ public class GameSession {
         } else {
             sendToPlayer(playerStone, "MESSAGE Waiting for other player to restart...");
         }
+    }
+
+    private String boardToProtocolString() {
+        StringBuilder builder = new StringBuilder();
+
+        for (int row = 0; row < go.model.Board.SIZE; row++) {
+            for (int col = 0; col < go.model.Board.SIZE; col++) {
+                Stone stone = gameState.getBoard().getStone(row, col);
+
+                if (stone == Stone.BLACK) {
+                    builder.append("B");
+                } else if (stone == Stone.WHITE) {
+                    builder.append("W");
+                } else {
+                    builder.append(".");
+                }
+            }
+
+            if (row < go.model.Board.SIZE - 1) {
+                builder.append("|");
+            }
+        }
+
+        return builder.toString();
     }
 }

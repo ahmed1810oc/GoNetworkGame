@@ -1,8 +1,8 @@
 package go.model;
 
 /**
- * Represents the Go board.
- * We will use a 9x9 board to keep the project simple and manageable.
+ * Represents the Go board. We will use a 9x9 board to keep the project simple
+ * and manageable.
  */
 public class Board {
 
@@ -54,8 +54,8 @@ public class Board {
     }
 
     /**
-     * Removes a stone from the board.
-     * This will be useful later for capture logic.
+     * Removes a stone from the board. This will be useful later for capture
+     * logic.
      */
     public void removeStone(int row, int col) {
         if (isInsideBoard(row, col)) {
@@ -86,8 +86,7 @@ public class Board {
     }
 
     /**
-     * Prints the board in console.
-     * Useful for testing before GUI.
+     * Prints the board in console. Useful for testing before GUI.
      */
     public void printBoard() {
         for (int row = 0; row < SIZE; row++) {
@@ -101,6 +100,28 @@ public class Board {
                 }
             }
             System.out.println();
+        }
+    }
+
+    /**
+     * Directly sets a board position. Useful for capture logic and undoing
+     * invalid moves.
+     */
+    public void setStone(int row, int col, Stone stone) {
+        if (isInsideBoard(row, col)) {
+            grid[row][col] = stone;
+        }
+    }
+
+    /**
+     * Replaces the board grid with a copied grid. Useful when undoing an
+     * illegal move.
+     */
+    public void setGrid(Stone[][] newGrid) {
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                grid[row][col] = newGrid[row][col];
+            }
         }
     }
 }
