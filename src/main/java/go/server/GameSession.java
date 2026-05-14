@@ -49,6 +49,7 @@ public class GameSession {
 
             broadcast("START");
             broadcast("TURN BLACK");
+            broadcastCapturedCounts();
 
             System.out.println("Game session started.");
 
@@ -83,6 +84,8 @@ public class GameSession {
             handleMove(message, playerStone);
         } else if (message.startsWith("PASS")) {
             handlePass(playerStone);
+        } else if (message.startsWith("RESIGN")) {
+            handleResign(playerStone);
         } else if (message.startsWith("RESTART_REQUEST")) {
             handleRestartRequest(playerStone);
         } else if (message.startsWith("NAME")) {
@@ -108,7 +111,13 @@ public class GameSession {
 
             if (success) {
                 broadcast("BOARD " + boardToProtocolString());
+                broadcastCapturedCounts();
                 broadcast("TURN " + gameState.getCurrentTurn());
+
+                if (gameLogic.getLastCapturedCount() > 0) {
+                    broadcast("MESSAGE " + playerStone + " captured " + gameLogic.getLastCapturedCount() + " stone(s).");
+                }
+
                 gameState.getBoard().printBoard();
             } else {
                 sendToPlayer(playerStone, "INVALID_MOVE");
@@ -203,5 +212,30 @@ public class GameSession {
         }
 
         return builder.toString();
+    }
+
+    private void handleResign(Stone playerStone) {
+        if (gameState.isGameOver()) {
+            return;
+        }
+
+        gameState.endGame();
+
+        Stone winner = playerStone.opposite();
+
+        int blackScore = gameLogic.countStones(Stone.BLACK);
+        int whiteScore = gameLogic.countStones(Stone.WHITE);
+
+        broadcast("GAME_OVER " + winner + " " + blackScore + " " + whiteScore);
+
+        System.out.println(playerStone + " resigned.");
+        System.out.println("Winner: " + winner);
+    }
+
+    private void broadcastCapturedCounts() {
+        broadcast("CAPTURES "
+                + gameState.getBlackCapturedCount()
+                + " "
+                + gameState.getWhiteCapturedCount());
     }
 }

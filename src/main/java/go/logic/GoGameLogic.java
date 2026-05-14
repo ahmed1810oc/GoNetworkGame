@@ -12,17 +12,21 @@ public class GoGameLogic {
     private GameState gameState;
     private MoveValidator moveValidator;
     private CaptureChecker captureChecker;
+    private int lastCapturedCount;
 
     public GoGameLogic(GameState gameState) {
         this.gameState = gameState;
         this.moveValidator = new MoveValidator();
         this.captureChecker = new CaptureChecker();
+        this.lastCapturedCount = 0;
     }
 
     /**
      * Tries to place a stone for the current player.
      */
     public boolean playMove(int row, int col, Stone playerStone) {
+        lastCapturedCount = 0;
+
         if (gameState.isGameOver()) {
             return false;
         }
@@ -37,22 +41,17 @@ public class GoGameLogic {
             return false;
         }
 
-        // Save board before move.
-        // If the move is illegal because of suicide, we can restore it.
         Stone[][] oldBoard = gameState.getBoard().getGridCopy();
 
         gameState.getBoard().placeStone(row, col, playerStone);
 
-        // Remove opponent stones with no liberties.
-        captureChecker.removeCapturedOpponentStones(
+        lastCapturedCount = captureChecker.removeCapturedOpponentStones(
                 gameState.getBoard(),
                 row,
                 col,
                 playerStone
         );
 
-        // Prevent suicide move.
-        // If the placed stone's own group has no liberties after captures, undo the move.
         boolean ownGroupHasLiberty = captureChecker.groupHasLiberty(
                 gameState.getBoard(),
                 row,
@@ -61,20 +60,25 @@ public class GoGameLogic {
 
         if (!ownGroupHasLiberty) {
             gameState.getBoard().setGrid(oldBoard);
+            lastCapturedCount = 0;
             return false;
         }
 
-        // Since this was a real move, reset pass tracking.
-        gameState.setLastMoveWasPass(false);
+        gameState.addCapturedStones(playerStone, lastCapturedCount);
 
+        gameState.setLastMoveWasPass(false);
         gameState.switchTurn();
 
         return true;
     }
 
+    public int getLastCapturedCount() {
+        return lastCapturedCount;
+    }
+
     /**
-     * Handles pass action.
-     * Returns true if the game ends because both players passed consecutively.
+     * Handles pass action. Returns true if the game ends because both players
+     * passed consecutively.
      */
     public boolean passTurn(Stone playerStone) {
         if (gameState.isGameOver()) {
@@ -97,8 +101,8 @@ public class GoGameLogic {
     }
 
     /**
-     * Counts stones and returns the winner.
-     * This is a simplified scoring system for the project.
+     * Counts stones and returns the winner. This is a simplified scoring system
+     * for the project.
      */
     public Stone calculateWinner() {
         int blackCount = countStones(Stone.BLACK);
@@ -109,7 +113,7 @@ public class GoGameLogic {
         } else if (whiteCount > blackCount) {
             return Stone.WHITE;
         } else {
-            return Stone.EMPTY; // draw
+            return Stone.EMPTY;
         }
     }
 

@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 
 /**
  * Main game window for the client.
@@ -19,7 +20,9 @@ public class GameScreen extends JFrame {
     private NetworkClient networkClient;
     private BoardPanel boardPanel;
     private JLabel statusLabel;
+    private JLabel captureLabel;
     private JButton passButton;
+    private JButton resignButton;
 
     private Stone myStone;
     private Stone currentTurn;
@@ -51,6 +54,10 @@ public class GameScreen extends JFrame {
         statusLabel.setFont(new Font("Arial", Font.BOLD, 18));
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
 
+        captureLabel = new JLabel("Captured - Black: 0 | White: 0");
+        captureLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        captureLabel.setHorizontalAlignment(JLabel.CENTER);
+
         boardPanel = new BoardPanel();
         passButton = new JButton("Pass");
         passButton.setFont(new Font("Arial", Font.BOLD, 16));
@@ -81,11 +88,36 @@ public class GameScreen extends JFrame {
             networkClient.sendMessage("MOVE " + row + " " + col);
         });
 
+        resignButton = new JButton("Resign");
+        resignButton.setFont(new Font("Arial", Font.BOLD, 16));
+
+        resignButton.addActionListener(e -> {
+            if (myStone == null) {
+                return;
+            }
+
+            int choice = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to resign?",
+                    "Confirm Resign",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (choice == JOptionPane.YES_OPTION) {
+                networkClient.sendMessage("RESIGN");
+            }
+        });
+
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(passButton);
+        bottomPanel.add(resignButton);
+
+        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        topPanel.add(statusLabel);
+        topPanel.add(captureLabel);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(statusLabel, BorderLayout.NORTH);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(boardPanel, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -131,6 +163,8 @@ public class GameScreen extends JFrame {
                 handleValidMoveMessage(message);
             } else if (message.startsWith("BOARD")) {
                 handleBoardMessage(message);
+            } else if (message.startsWith("CAPTURES")) {
+                handleCapturesMessage(message);
             } else if (message.startsWith("PASS")) {
                 handlePassMessage(message);
             } else if (message.startsWith("GAME_OVER")) {
@@ -212,7 +246,9 @@ public class GameScreen extends JFrame {
         boardPanel.clearBoard();
         currentTurn = Stone.BLACK;
         statusLabel.setText("New game started.");
+        captureLabel.setText("Captured - Black: 0 | White: 0");
         setVisible(true);
+
     }
 
     private void handleBoardMessage(String message) {
@@ -245,5 +281,16 @@ public class GameScreen extends JFrame {
         }
 
         boardPanel.repaint();
+    }
+
+    private void handleCapturesMessage(String message) {
+        String[] parts = message.split(" ");
+
+        if (parts.length == 3) {
+            String blackCaptures = parts[1];
+            String whiteCaptures = parts[2];
+
+            captureLabel.setText("Captured - Black: " + blackCaptures + " | White: " + whiteCaptures);
+        }
     }
 }
