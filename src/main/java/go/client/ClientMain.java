@@ -1,4 +1,4 @@
-package go.client;
+    package go.client;
 
 import go.ui.StartScreen;
 

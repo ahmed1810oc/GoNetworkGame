@@ -2,13 +2,16 @@ package go.ui;
 
 import go.client.NetworkClient;
 import go.model.Stone;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 
@@ -19,8 +22,13 @@ public class GameScreen extends JFrame {
 
     private NetworkClient networkClient;
     private BoardPanel boardPanel;
+
+    private JLabel titleLabel;
     private JLabel statusLabel;
+    private JLabel playerColorLabel;
+    private JLabel turnLabel;
     private JLabel captureLabel;
+
     private JButton passButton;
     private JButton resignButton;
 
@@ -46,19 +54,54 @@ public class GameScreen extends JFrame {
 
     private void setupWindow() {
         setTitle("Go Network Game");
-        setSize(650, 720);
+        setSize(720, 780);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        titleLabel = new JLabel("Go Network Game");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 26));
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
         statusLabel = new JLabel("Connecting to server...");
         statusLabel.setFont(new Font("Arial", Font.BOLD, 18));
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
 
+        playerColorLabel = new JLabel("You are: Waiting...");
+        playerColorLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        playerColorLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        turnLabel = new JLabel("Current turn: Waiting...");
+        turnLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        turnLabel.setHorizontalAlignment(JLabel.CENTER);
+
         captureLabel = new JLabel("Captured - Black: 0 | White: 0");
         captureLabel.setFont(new Font("Arial", Font.PLAIN, 15));
         captureLabel.setHorizontalAlignment(JLabel.CENTER);
 
+        JPanel infoPanel = new JPanel(new GridLayout(5, 1, 5, 5));
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        infoPanel.add(titleLabel);
+        infoPanel.add(statusLabel);
+        infoPanel.add(playerColorLabel);
+        infoPanel.add(turnLabel);
+        infoPanel.add(captureLabel);
+
         boardPanel = new BoardPanel();
+        boardPanel.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 2));
+
+        boardPanel.setBoardClickListener((row, col) -> {
+            if (myStone == null || currentTurn == null) {
+                return;
+            }
+
+            if (myStone != currentTurn) {
+                JOptionPane.showMessageDialog(this, "It is not your turn.");
+                return;
+            }
+
+            networkClient.sendMessage("MOVE " + row + " " + col);
+        });
+
         passButton = new JButton("Pass");
         passButton.setFont(new Font("Arial", Font.BOLD, 16));
 
@@ -73,19 +116,6 @@ public class GameScreen extends JFrame {
             }
 
             networkClient.sendMessage("PASS");
-        });
-
-        boardPanel.setBoardClickListener((row, col) -> {
-            if (myStone == null || currentTurn == null) {
-                return;
-            }
-
-            if (myStone != currentTurn) {
-                JOptionPane.showMessageDialog(this, "It is not your turn.");
-                return;
-            }
-
-            networkClient.sendMessage("MOVE " + row + " " + col);
         });
 
         resignButton = new JButton("Resign");
@@ -108,16 +138,18 @@ public class GameScreen extends JFrame {
             }
         });
 
-        JPanel bottomPanel = new JPanel();
+        // Important: disable buttons only AFTER they are created
+        passButton.setEnabled(false);
+        resignButton.setEnabled(false);
+
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 15, 10));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 120, 15, 120));
         bottomPanel.add(passButton);
         bottomPanel.add(resignButton);
 
-        JPanel topPanel = new JPanel(new GridLayout(2, 1));
-        topPanel.add(statusLabel);
-        topPanel.add(captureLabel);
-
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.add(infoPanel, BorderLayout.NORTH);
         mainPanel.add(boardPanel, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -184,7 +216,10 @@ public class GameScreen extends JFrame {
 
         if (parts.length == 2) {
             myStone = Stone.valueOf(parts[1]);
-            setTitle("Go Network Game - You are " + myStone);
+
+            setTitle("Go Network Game - " + playerName + " - " + myStone);
+            resignButton.setEnabled(true);
+            playerColorLabel.setText("You are: " + myStone);
         }
     }
 
@@ -194,10 +229,14 @@ public class GameScreen extends JFrame {
         if (parts.length == 2) {
             currentTurn = Stone.valueOf(parts[1]);
 
+            turnLabel.setText("Current turn: " + currentTurn);
+
             if (currentTurn == myStone) {
-                statusLabel.setText("Your turn: " + currentTurn);
+                statusLabel.setText("Your turn. Choose a place on the board.");
+                passButton.setEnabled(true);
             } else {
-                statusLabel.setText("Opponent's turn: " + currentTurn);
+                statusLabel.setText("Waiting for opponent...");
+                passButton.setEnabled(false);
             }
         }
     }
@@ -230,6 +269,9 @@ public class GameScreen extends JFrame {
             String blackScore = parts[2];
             String whiteScore = parts[3];
 
+            passButton.setEnabled(false);
+            resignButton.setEnabled(false);
+
             endScreen = new EndScreen(winner, blackScore, whiteScore, networkClient);
             endScreen.setVisible(true);
 
@@ -245,10 +287,21 @@ public class GameScreen extends JFrame {
 
         boardPanel.clearBoard();
         currentTurn = Stone.BLACK;
-        statusLabel.setText("New game started.");
-        captureLabel.setText("Captured - Black: 0 | White: 0");
-        setVisible(true);
 
+        captureLabel.setText("Captured - Black: 0 | White: 0");
+        turnLabel.setText("Current turn: BLACK");
+
+        resignButton.setEnabled(true);
+
+        if (myStone == Stone.BLACK) {
+            statusLabel.setText("New game started. Your turn.");
+            passButton.setEnabled(true);
+        } else {
+            statusLabel.setText("New game started. Waiting for opponent...");
+            passButton.setEnabled(false);
+        }
+
+        setVisible(true);
     }
 
     private void handleBoardMessage(String message) {
