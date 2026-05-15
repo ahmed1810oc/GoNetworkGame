@@ -1,0 +1,30 @@
+AWS Server Information
+
+The server side of the Go Network Game was deployed on an AWS EC2 instance.
+
+EC2 Region:
+Europe (Stockholm) - eu-north-1
+
+Public IPv4 Address:
+51.20.3.87
+
+Server Port:
+5000
+
+How to connect:
+1. Run the client application.
+2. In the start screen, enter:
+
+Server IP: 51.20.3.87
+Port: 5000
+
+3. Run the client twice to connect two players.
+
+Server command used on AWS:
+nohup mvn exec:java -Dexec.mainClass="go.server.ServerMain" > server.log 2>&1 &
+
+How to check server log:
+tail -f server.log
+
+Note:
+If the AWS instance is stopped and started again, the public IP address may change.

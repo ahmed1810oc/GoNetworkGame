@@ -1,0 +1,158 @@
+Go Network Game Project Report
+
+1. Project Overview
+
+This project is a two-player online Go game developed in Java for a Computer Networks course. The project uses a client-server architecture. The server manages the game state and communication between two clients, while the clients provide a graphical user interface for the players.
+
+The game is based on the Go board game. The implemented version uses a 9x9 board to keep the game simple, clear, and suitable for a networking project.
+
+2. Technologies Used
+
+- Java
+- Java Swing for the graphical user interface
+- Java Socket Programming for networking
+- Maven for building the project
+- Git and GitHub for version control
+- AWS EC2 for server deployment
+
+3. System Architecture
+
+The project follows a client-server architecture.
+
+The server runs on AWS EC2 and waits for two clients to connect. When two clients are connected, the server assigns the first player as BLACK and the second player as WHITE. The server controls the game state, validates moves, updates turns, handles captures, and broadcasts board updates to both clients.
+
+The clients run on the users’ computers. Each client connects to the AWS server using the server public IP address and port number. The client displays the game using a Java Swing GUI.
+
+Architecture:
+
+Client 1  --->  AWS Server  <---  Client 2
+
+4. Server Description
+
+The server is console-based. It uses ServerSocket to listen for client connections on port 5000. After two players connect, the server creates a game session.
+
+The server responsibilities include:
+
+- Accepting two client connections
+- Assigning player colors
+- Receiving moves from clients
+- Validating moves
+- Managing turns
+- Handling pass and resign actions
+- Handling captured stones
+- Sending updated board state to both clients
+- Restarting the game when both players request replay
+
+5. Client Description
+
+The client is a Java Swing application. It contains a start screen, game screen, and end screen.
+
+The start screen allows the user to enter:
+
+- Server IP address
+- Port number
+- Player name
+
+The game screen displays:
+
+- The Go board
+- Player color
+- Current turn
+- Captured-stone counters
+- Pass button
+- Resign button
+
+The end screen displays:
+
+- Winner
+- Final score
+- Play Again button
+- Exit button
+
+6. Networking Protocol
+
+The client and server communicate using simple text-based messages.
+
+Examples of protocol messages:
+
+ASSIGN BLACK
+ASSIGN WHITE
+START
+TURN BLACK
+MOVE row col
+BOARD board-data
+CAPTURES blackCount whiteCount
+PASS
+RESIGN
+GAME_OVER winner blackScore whiteScore
+RESTART_REQUEST
+RESTART
+
+The server is the authority. Clients send requests, but the server decides whether moves are valid.
+
+7. Game Features
+
+The implemented game includes:
+
+- Two-player network gameplay
+- 9x9 Go board
+- GUI client
+- Console server
+- AWS-hosted server
+- Player color assignment
+- Turn-based movement
+- Invalid move detection
+- Capture logic
+- Captured-stone counters
+- Pass button
+- Resign button
+- Game over screen
+- Replay without closing the application
+
+8. AWS Deployment
+
+The server was deployed on an AWS EC2 instance.
+
+AWS server information:
+
+Region:
+Europe (Stockholm) - eu-north-1
+
+Public IPv4 Address:
+51.20.3.87
+
+Port:
+5000
+
+The server was started on AWS using:
+
+nohup mvn exec:java -Dexec.mainClass="go.server.ServerMain" > server.log 2>&1 &
+
+Clients connect to the AWS server by entering:
+
+Server IP: 51.20.3.87
+Port: 5000
+
+9. How to Run the Project
+
+To run locally:
+
+1. Run go.server.ServerMain.
+2. Run go.client.ClientMain twice.
+3. In both clients, enter:
+
+Server IP: localhost
+Port: 5000
+
+To run with AWS:
+
+1. Make sure the AWS server is running.
+2. Run go.client.ClientMain twice.
+3. In both clients, enter:
+
+Server IP: 51.20.3.87
+Port: 5000
+
+10. Conclusion
+
+This project successfully implements a networked two-player Go game using Java socket programming. The server runs on AWS and manages communication between two GUI clients. The project demonstrates core computer networking concepts such as client-server architecture, sockets, message exchange, synchronization between clients, and remote server deployment.
